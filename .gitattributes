@@ -1,0 +1,2 @@
+*.c filter=strip_notes
+*.h filter=strip_notes
