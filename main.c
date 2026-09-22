@@ -84,19 +84,19 @@ int interval(int min, int max) {
 void calculate_items_count(int (*dict_ID_count)[TOTAL_NUMBER_OF_ITEMS]) {  // <-- сразу указваю размерность массива в аргументе
                                                                            // дальнейшая проверка уже будет не нужна
 
-  for (int i = 0; i < TOTAL_NUMBER_OF_ITEMS; i++) { // <-- занумляем массив, чтобы точно знать, что он девственно чистый
+  for (int i = 0; i < TOTAL_NUMBER_OF_ITEMS; i++) {  // <-- занумляем массив, чтобы точно знать, что он девственно чистый
     (*dict_ID_count)[i] = 0;
   }
 
-  for (int i = 0; i < INVENTORY_SIZE; i++) { // <-- Уже считаем кол-во пердметов в инвентаре
-    (*dict_ID_count)[inventory[i]] += 1; // <-- Убрал глупую проверку на ID == 0. Зачем она вообще мне нужна?
+  for (int i = 0; i < INVENTORY_SIZE; i++) {  // <-- Уже считаем кол-во пердметов в инвентаре
+    (*dict_ID_count)[inventory[i]] += 1;      // <-- Убрал глупую проверку на ID == 0. Зачем она вообще мне нужна?
   }
 }
 
 void change_time() {
   system("cls");
   puts("РАБОТА\n");
-  puts("Сколько часов добавим?");
+  printf("Сколько часов добавим?");
   int time_add = abs(int_extractor());
   current_hour += time_add;
   current_day += current_hour / 24;
@@ -117,16 +117,21 @@ void give_item() {  // выдача предмета
   system("cls");
   puts("ВЫДАЧА ПРЕДМЕТА\n");
   puts("В какой слот?");
+  printf("Введите номер слота (от %d до %d): ", 0, INVENTORY_SIZE - 1);
   int slot = interval(0, INVENTORY_SIZE - 1);
 
-  if (inventory[slot] != 0) {
-    puts("Слот занят. Сначала выброси предмет из него");
-    pause_screen();
-    return;
-  }
+  // Облегчу жизнь конвееру с этими проверками. Просто уберу это и всё.
+  // К тому же в ТЗ (лабораторной работе) не было написано про проверку предмета в слоте.
+
+  // if (inventory[slot] != 0) {
+  //   puts("Слот занят. Сначала выброси предмет из него");
+  //   pause_screen();
+  //   return;
+  // }
 
   puts("Что надо?");
-  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);  // Зачем в пустой слот опять ложить воздух 🤔
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
+  int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);  // Зачем в пустой слот опять ложить воздух 🤔. UPD: потому что ты не должен проверять предмет в слоте 🙄🙄🙄 тип бошш челл
   set_item_in_slot(slot, item_id);
   pause_screen();
 }
@@ -134,9 +139,12 @@ void give_item() {  // выдача предмета
 void remove_item() {  // удалить предмет из слота
   system("cls");
   puts("УДАЛЕНИЕ ПРЕДМЕТА\n");
+
   puts("Давай слот");
+  printf("Введите номер слота (от %d до %d): ", 0, INVENTORY_SIZE - 1);
   int slot = interval(0, INVENTORY_SIZE - 1);
-  set_item_in_slot(slot, 0);  // 0 - есть отсутствие предмета в слоте
+
+  set_item_in_slot(slot, 0);  // 0 - отсутствие предмета в слоте
   pause_screen();
 }
 // ВСЁ ДАЛЬШЕ ДЛЯ 6-го пункта!!
@@ -193,7 +201,6 @@ void inversion_inv() {
   for (int j = 1; j < INVENTORY_SIZE + 1; j++) {
     printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j - 1, ITEM_NAMES[inventory[INVENTORY_SIZE - j]], inventory[INVENTORY_SIZE - j], ITEM_NAMES[inventory[j - 1]], inventory[j - 1]);
   }
-  puts("\nИнвентарь перевёрнут");
   pause_screen();
 }
 
@@ -204,7 +211,7 @@ void unique_items_list() {
   // Получаем массив с кол-вом предметов, где i - id предмета, а dict_ID_count[i] - кол-во предмета с этим ID в инвентаре
   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
   calculate_items_count(&dict_ID_count);
-  
+
   for (int j = 1; j < TOTAL_NUMBER_OF_ITEMS; j++) {
     printf("%s(%d): %d\n", ITEM_NAMES[j], j, dict_ID_count[j]);
   }
