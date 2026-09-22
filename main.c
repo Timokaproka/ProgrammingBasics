@@ -111,7 +111,7 @@ void give_item() {  // выдача предмета
   }
 
   puts("Что надо?");
-  int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
+  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1); // Зачем в пустой слот опять ложить воздух 🤔
   set_item_in_slot(slot, item_id);
   pause_screen();
 }
@@ -119,17 +119,16 @@ void give_item() {  // выдача предмета
 void remove_item() {  // удалить предмет из слота
   system("cls");
   puts("УДАЛЕНИЕ ПРЕДМЕТА\n");
-  puts("Используй четвёртое действие для предмета 0 🙄🙄🙄");
-  puts("Ладно, знаю что лень. Давай слот");
+  puts("Давай слот");
   int slot = interval(0, INVENTORY_SIZE - 1);
   set_item_in_slot(slot, 0);  // 0 - есть отсутствие предмета в слоте
   pause_screen();
 }
-
+// ВСЁ ДАЛЬШЕ ДЛЯ 6-го пункта!!
 void count_item() {
   system("cls");
   puts("РЕВИЗИЯ РЕСУРСОВ\n");
-  puts("Введите ID предмета (от 1 до 9):");
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
   int count_item = 0;
   int slots[INVENTORY_SIZE] = {0};
@@ -197,7 +196,7 @@ void unique_items_list() {
 void remove_trash() {
   system("cls");
   puts("ОЧИСТКА ОТ МУСОРА\n");
-  puts("Введите id предмета (от 1 до 9):");
+  printf("Введите ID предмета (от %d до %d): ", 1, TOTAL_NUMBER_OF_ITEMS - 1);
   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
   int count_trash_item = 0;
   for (int i = 0; i < INVENTORY_SIZE; i++) {
@@ -213,7 +212,7 @@ void remove_trash() {
 void find_heaviness() {
   system("cls");
   puts("ПОИСК ТЯЖЕСТЕЙ\n");
-  puts("Введите id предмета (от 0 до 9):");
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
 
   int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
   for (int i = 0; i < INVENTORY_SIZE; i++) {
@@ -228,7 +227,7 @@ void find_heaviness() {
 // но нормально реализовать это без структур, указателей и дтинамического выделения памяти невозможно (как утверждает gemini).
 // Так что придётся просто дублировать код.
 
-void favorite() {
+void favorite_item() {
   system("cls");
   puts("ЛЮБИМЫЙ ПРЕДМЕТ\n");
   int max_id = 0;
@@ -253,6 +252,8 @@ void favorite() {
 }
 
 void swap_item() {
+  puts("ПЕРЕНОС ПРЕДМЕТА В БЫСТРЫЙ СЛОТ\n");
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
   int first_slot = -1;
   for (int i = 0; i < INVENTORY_SIZE; i++) {
@@ -285,23 +286,23 @@ void swap_item() {
   pause_screen();
 }
 
-void neighbours() {
+void items_is_neighbours() {
   system("cls");
-  puts("ПРОВЕРКА СОСЕДЕЙ ПО ID!\n");
-  puts("Первый ID (от 0 до 9):");
-  int first_id = interval(0, 9);
-  puts("Второй ID (от 0 до 9):");
-  int second_id = interval(0, 9);
+  puts("ПРОВЕРКА СОСЕДЕЙ ПО ID\n");
+  printf("Первый ID (от 0 до %d): ", TOTAL_NUMBER_OF_ITEMS - 1);
+  int first_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
+  printf("Второй ID (от 0 до %d): ", TOTAL_NUMBER_OF_ITEMS - 1);
+  int second_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
 
   bool neighbours = false;
   // Вот тут надо INVENTORY_SIZE - 1 т.к. будем идти по индексам до i + 1 и чтобы не выходить за границы массива мы будем умными (логика 6-тилетнего ребёнка)
   for (int i = 0; i < INVENTORY_SIZE - 1; i++) {
-    if ((inventory[i] == first_id & inventory[i + 1] == second_id) | (inventory[i] == second_id & inventory[i+1] == first_id)) { // Тут буду использовать именно побитовые операции, т.к. неизвестно
-                                                                                                                                 // как пользователь (любый преподаватель) исказит изначальный инвентарь, так что буду
-                                                                                                                                 // использовать вариант без ветвлений.
-                                                                                                                                 // На самом деле очень интересная тема с тем, как компилятор преобразует это условие
-                                                                                                                                 // с условными операторами и битовыми операторами. Возможно, стоит пересмотреть другие 
-                                                                                                                                 // условия из уже реализованных функций 🤔
+    if ((inventory[i] == first_id & inventory[i + 1] == second_id) | (inventory[i] == second_id & inventory[i + 1] == first_id)) {  // Тут буду использовать именно побитовые операции, т.к. неизвестно
+                                                                                                                                    // как пользователь (любый преподаватель) исказит изначальный инвентарь, так что буду
+                                                                                                                                    // использовать вариант без ветвлений.
+                                                                                                                                    // На самом деле очень интересная тема с тем, как компилятор преобразует это условие
+                                                                                                                                    // с условными операторами и битовыми операторами. Возможно, стоит пересмотреть другие
+                                                                                                                                    // условия из уже реализованных функций 🤔
       printf("Найдены ID: %d, %d\n", i, i + 1);
       neighbours = true;
     }
@@ -323,12 +324,15 @@ void remove_duplicates_items() {
     old_inventory[x] = inventory[x];
   }
 
+  // Получаем кол-во предметов по ID
   for (int i = 0; i < INVENTORY_SIZE; i++) {
     if (inventory[i] != 0) {
       dict_ID_count[inventory[i]] += 1;
     }
   }
 
+  // Удаляем предмет из слота, если кол-во предмета > 1
+  // и соответственно уменьшаем кол-во предмета в dict_ID_count
   for (int i = 0; i < INVENTORY_SIZE; i++) {
     if (dict_ID_count[inventory[i]] > 1) {
       dict_ID_count[inventory[i]] -= 1;
@@ -342,21 +346,72 @@ void remove_duplicates_items() {
   pause_screen();
 }
 
-int main(int argc, char* argv[]) {
-  SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
+void second_menu() {
+  while (true) {
+    system("cls");
+    puts("[0] В главное меню");
+    puts("[1] Ревизия ресурсов");
+    puts("[2] Сортировка инвентаря");
+    puts("[3] Инверсия инвентаря");
+    puts("[4] Уникальные предметы");
+    puts("[5] Выбросить мусор");
+    puts("[6] Поиск тяжестей");
+    puts("[7] Любимый ресурс");
+    puts("[8] Быстрый доступ");
+    puts("[9] Соседние ячейки");
+    puts("[10] Удалить дубликаты");
+    printf("\nВыберите пункт: ");
+    switch (interval(0, 10)) {
+      case 0:
+        return;
+      case 1:
+        count_item();
+        break;
+      case 2:
+        sort_inv();
+        break;
+      case 3:
+        inversion_inv();
+        break;
+      case 4:
+        unique_items_list();
+        break;
+      case 5:
+        remove_trash();
+        break;
+      case 6:
+        find_heaviness();
+        break;
+      case 7:
+        favorite_item();
+        break;
+      case 8:
+        swap_item();
+        break;
+      case 9:
+        items_is_neighbours();
+        break;
+      case 10:
+        remove_duplicates_items();
+        break;
+    }
+  }
+}
+
+void main_menu() {
   while (true) {
     system("cls");
     puts("[0] Выход");
     puts("[1] Посмотреть на часы");
-    puts("[2] Промотать время (Поработать)");
+    puts("[2] Промотать время (поработать)");
     puts("[3] Посмотреть инвентарь");
     puts("[4] Положить предмет в слот");
     puts("[5] Выбросить предмет");
-    puts("[6] Очистка от мусора");
+    puts("[6] По вариантам");
     printf("\nВыберите пункт: ");
-    switch (interval(10, 0)) {
+    switch (interval(6, 0)) {
       case 0:
-        return EXIT_SUCCESS;
+        return;
       case 1:
         system("cls");
         printf("Текущее время: День %d, %02d:00\n", current_day, current_hour);
@@ -380,21 +435,14 @@ int main(int argc, char* argv[]) {
         remove_item();
         break;
       case 6:
-        remove_trash();
-        break;
-      case 7:
-        count_item();
-        break;
-      case 8:
-        sort_inv();
-        break;
-      case 9:
-        neighbours();
-        break;
-      case 10:
-        remove_duplicates_items();
+        second_menu();
         break;
     }
   }
+}
+
+int main(int argc, char* argv[]) {
+  SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
+  main_menu();
   return EXIT_SUCCESS;
 }
