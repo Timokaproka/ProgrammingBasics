@@ -77,6 +77,22 @@ int interval(int min, int max) {
   }
 }
 
+// Всё таки решил убрать это ужасное дублирование dict_ID_count в 3 (или 4) местах кода.
+// Кароче в аргумент передаём указатель МАССИВ в памяти. Вообще изначально это мог быть просто просто указатель
+// на первый элемент в массиве, но понял, что лучше будет перепроверить расзмерность массива, который передаётся в функцию.
+// Это можно сделать только при передачи указателя на сам массив, а не на отдельный элемент.
+void calculate_items_count(int (*dict_ID_count)[TOTAL_NUMBER_OF_ITEMS]) {  // <-- сразу указваю размерность массива в аргументе
+                                                                           // дальнейшая проверка уже будет не нужна
+
+  for (int i = 0; i < TOTAL_NUMBER_OF_ITEMS; i++) { // <-- занумляем массив, чтобы точно знать, что он девственно чистый
+    (*dict_ID_count)[i] = 0;
+  }
+
+  for (int i = 0; i < INVENTORY_SIZE; i++) { // <-- Уже считаем кол-во пердметов в инвентаре
+    (*dict_ID_count)[inventory[i]] += 1; // <-- Убрал глупую проверку на ID == 0. Зачем она вообще мне нужна?
+  }
+}
+
 void change_time() {
   system("cls");
   puts("РАБОТА\n");
@@ -184,15 +200,15 @@ void inversion_inv() {
 void unique_items_list() {
   system("cls");
   puts("УНИКАЛЬНОСТЬ ПРЕДМЕТОВ\n");
+
+  // Получаем массив с кол-вом предметов, где i - id предмета, а dict_ID_count[i] - кол-во предмета с этим ID в инвентаре
   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
-  for (int i = 0; i < INVENTORY_SIZE; i++) {
-    if (inventory[i] != 0) {
-      dict_ID_count[inventory[i]] += 1;
-    }
-  }
+  calculate_items_count(&dict_ID_count);
+  
   for (int j = 1; j < TOTAL_NUMBER_OF_ITEMS; j++) {
     printf("%s(%d): %d\n", ITEM_NAMES[j], j, dict_ID_count[j]);
   }
+
   pause_screen();
 }
 
@@ -231,22 +247,15 @@ void find_heaviness() {
   pause_screen();
 }
 
-// Вообще по хорошему тут я должен не дублировать код из unique_items() чтобы получить dict_ID_count (кол-во предметов с ID != 0),
-// но нормально реализовать это без структур, указателей и дтинамического выделения памяти невозможно (как утверждает gemini).
-// Так что придётся просто дублировать код.
-
 void favorite_item() {
   system("cls");
   puts("ЛЮБИМЫЙ ПРЕДМЕТ\n");
   int max_id = 0;
   int max_count = 0;
+
   // Собираю кол-во предметов из инвентаря
   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
-  for (int i = 0; i < INVENTORY_SIZE; i++) {
-    if (inventory[i] != 0) {
-      dict_ID_count[inventory[i]] += 1;
-    }
-  }
+  calculate_items_count(&dict_ID_count);
 
   for (int i = 1; i < TOTAL_NUMBER_OF_ITEMS; i++) {
     if (max_count < dict_ID_count[i]) {
@@ -286,7 +295,6 @@ void swap_item() {
   }
   set_item_in_slot(first_slot, inventory[0]);
   set_item_in_slot(0, item_id);
-
 
   for (int i = 0; i < INVENTORY_SIZE; i++) {
     if (i == 0) {
@@ -331,18 +339,14 @@ void items_is_neighbours() {
 void remove_duplicates_items() {
   system("cls");
   puts("ТОЛЬКО УНИКАЛЬНЫЕ ПРЕДМЕТЫ\n");
+
   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
+  calculate_items_count(&dict_ID_count);
+
   // Это просто сохраняет старый инвентарь. Для вывода в конче
   int old_inventory[INVENTORY_SIZE];
   for (int x = 0; x < INVENTORY_SIZE; x++) {
     old_inventory[x] = inventory[x];
-  }
-
-  // Получаем кол-во предметов по ID
-  for (int i = 0; i < INVENTORY_SIZE; i++) {
-    if (inventory[i] != 0) {
-      dict_ID_count[inventory[i]] += 1;
-    }
   }
 
   // Удаляем предмет из слота, если кол-во предмета > 1
