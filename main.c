@@ -26,7 +26,7 @@ const char* const ITEM_NAMES[TOTAL_NUMBER_OF_ITEMS] = {
     [4] = "Железо",
     [5] = "Яблоко",
     [6] = "Деньга",
-    [7] = "Бутылка воды",
+    [7] = "Палка",
     [8] = "Веревка",
     [9] = "Удочка"};
 
@@ -89,8 +89,8 @@ void change_time() {
 }
 
 void set_item_in_slot(int slot, int item_id) {  // вообще думал, что для remove_item буду использовать give_item, с необязательными аргументами,
-                                                // но C сказал, что я казуал и аргумент или есть или нет, так что пришлось делать интерфейс (вроде так называется)
-                                                // кароче не будьте казуалами и делайте нормально
+                                                // но C сКазал, что я кАзуал и аРгумент или есть или нет, тАк что пришлоСь делать Интерфейс (вроде так называется)
+                                                // Кароче не будьте казуалами и делайте нормально
 
   if ((slot >= 0 && slot < INVENTORY_SIZE) && (item_id >= 0 && item_id < TOTAL_NUMBER_OF_ITEMS)) {  // если когда-нибудь забуду, добавить проверку для аргументов, при вызове функции
     inventory[slot] = item_id;
@@ -140,7 +140,7 @@ void count_item() {
   printf("\nКол-во: %d\n", count_item);
   printf("Слоты: ");
   for (int i = 0; i < count_item; i++) {
-    printf("%d ", slots[i]);
+    printf("%d; ", slots[i]);
   }
   puts("");
   pause_screen();
@@ -157,9 +157,8 @@ void sort_inv() {
       temp_item += 1;
     }
   }
-  printf("Старый\tНовый\n");
   for (int i = 0; i < INVENTORY_SIZE; i++) {
-    printf("%d\t%d\n", inventory[i], temp_inv[i]);
+    printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[temp_inv[i]], temp_inv[i]);
     inventory[i] = temp_inv[i];
   }
   pause_screen();
@@ -168,12 +167,17 @@ void sort_inv() {
 void inversion_inv() {
   system("cls");
   puts("ИНВЕРСИЯ ИНВЕНТАРЬ\n");
+
   for (int i = 0; i < INVENTORY_SIZE / 2; i++) {
     int temp_item = inventory[i];
     inventory[i] = inventory[INVENTORY_SIZE - 1 - i];
     inventory[INVENTORY_SIZE - 1 - i] = temp_item;
   }
-  puts("Инвентарь перевёрнут");
+
+  for (int j = 1; j < INVENTORY_SIZE + 1; j++) {
+    printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j - 1, ITEM_NAMES[inventory[INVENTORY_SIZE - j]], inventory[INVENTORY_SIZE - j], ITEM_NAMES[inventory[j - 1]], inventory[j - 1]);
+  }
+  puts("\nИнвентарь перевёрнут");
   pause_screen();
 }
 
@@ -186,8 +190,8 @@ void unique_items_list() {
       dict_ID_count[inventory[i]] += 1;
     }
   }
-  for (int j = 1; j < INVENTORY_SIZE; j++) {
-    printf("%s (%d): %d\n", ITEM_NAMES[j], j, dict_ID_count[j]);
+  for (int j = 1; j < TOTAL_NUMBER_OF_ITEMS; j++) {
+    printf("%s(%d): %d\n", ITEM_NAMES[j], j, dict_ID_count[j]);
   }
   pause_screen();
 }
@@ -214,10 +218,15 @@ void find_heaviness() {
   printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
 
   int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
+  bool any_slot = false;
   for (int i = 0; i < INVENTORY_SIZE; i++) {
     if (inventory[i] > item_id) {
-      printf("%d\n", i);
+      any_slot = true;
+      printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);
     }
+  }
+  if (!any_slot) {
+    puts("Нет таких предметов в инвентаре\n");
   }
   pause_screen();
 }
@@ -239,7 +248,7 @@ void favorite_item() {
     }
   }
 
-  for (int i = 1; i < INVENTORY_SIZE; i++) {
+  for (int i = 1; i < TOTAL_NUMBER_OF_ITEMS; i++) {
     if (max_count < dict_ID_count[i]) {
       max_count = dict_ID_count[i];
       max_id = i;
@@ -255,6 +264,7 @@ void favorite_item() {
 }
 
 void swap_item() {
+  system("cls");
   puts("ПЕРЕНОС ПРЕДМЕТА В БЫСТРЫЙ СЛОТ\n");
   printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
@@ -266,7 +276,7 @@ void swap_item() {
     }
   }
   if (first_slot == -1) {
-    puts("Нет предмета в инвентаре\n");
+    puts("Нет таких предметов в инвентаре\n");
     pause_screen();
     return;
   } else if (first_slot == 0) {
@@ -277,14 +287,14 @@ void swap_item() {
   set_item_in_slot(first_slot, inventory[0]);
   set_item_in_slot(0, item_id);
 
-  puts("Старый\tНовый\n");
+
   for (int i = 0; i < INVENTORY_SIZE; i++) {
     if (i == 0) {
-      printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[first_slot]], inventory[first_slot], ITEM_NAMES[inventory[i]], inventory[i]);
+      printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[first_slot]], inventory[first_slot], ITEM_NAMES[inventory[i]], inventory[i]);
     } else if (i == first_slot) {
-      printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[0]], inventory[0], ITEM_NAMES[inventory[i]], inventory[i]);
+      printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[0]], inventory[0], ITEM_NAMES[inventory[i]], inventory[i]);
     } else {
-      printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[inventory[i]], inventory[i]);
+      printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[inventory[i]], inventory[i]);
     }
   }
   pause_screen();
@@ -344,9 +354,9 @@ void remove_duplicates_items() {
       inventory[j] = 0;
     }
   }
-  puts("Старый\tНовый\n");
+
   for (int j = 0; j < INVENTORY_SIZE; j++) {
-    printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[old_inventory[j]], old_inventory[j], ITEM_NAMES[inventory[j]], inventory[j]);
+    printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j, ITEM_NAMES[old_inventory[j]], old_inventory[j], ITEM_NAMES[inventory[j]], inventory[j]);
   }
   pause_screen();
 }
@@ -429,7 +439,7 @@ void main_menu() {
         system("cls");
         puts("ИНВЕНТАРЬ\n");
         for (int i = 0; i < INVENTORY_SIZE; i++) {
-          printf("Слот[%d]: %s (%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);  // Когда я вижу, что этот массив указателей реально работает у меня полюция под окном проходит.
+          printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);  // Когда я вижу, что этот массив указателей реально работает у меня полюция под окном проходит.
         }
         pause_screen();
         break;
