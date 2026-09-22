@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <winnt.h>
 
 #define INVENTORY_SIZE 10         // размер инвентаря
 #define TOTAL_NUMBER_OF_ITEMS 10  // просто кол-во предметов, которые есть. Вообще наверное стоит сделать список или enum, но пока пофик.
@@ -111,7 +110,7 @@ void give_item() {  // выдача предмета
   }
 
   puts("Что надо?");
-  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1); // Зачем в пустой слот опять ложить воздух 🤔
+  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);  // Зачем в пустой слот опять ложить воздух 🤔
   set_item_in_slot(slot, item_id);
   pause_screen();
 }
@@ -247,7 +246,11 @@ void favorite_item() {
     }
   }
 
-  printf("Любимый предмет: %s(%d) - %d шт.\n", ITEM_NAMES[max_id], max_id, max_count);
+  if (max_id == 0) {
+    printf("Инвентарь пустой. Нет любимых предметов\n");
+  } else {
+    printf("Любимый предмет: %s(%d) - %d шт.\n", ITEM_NAMES[max_id], max_id, max_count);
+  }
   pause_screen();
 }
 
@@ -274,14 +277,15 @@ void swap_item() {
   set_item_in_slot(first_slot, inventory[0]);
   set_item_in_slot(0, item_id);
 
+  puts("Старый\tНовый\n");
   for (int i = 0; i < INVENTORY_SIZE; i++) {
-    puts("Старый\tНовый\n");
     if (i == 0) {
       printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[first_slot]], inventory[first_slot], ITEM_NAMES[inventory[i]], inventory[i]);
     } else if (i == first_slot) {
       printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[0]], inventory[0], ITEM_NAMES[inventory[i]], inventory[i]);
+    } else {
+      printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[inventory[i]], inventory[i]);
     }
-    printf("%s(%d)\t%s(%d)\n", ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[inventory[i]], inventory[i]);
   }
   pause_screen();
 }
@@ -333,10 +337,11 @@ void remove_duplicates_items() {
 
   // Удаляем предмет из слота, если кол-во предмета > 1
   // и соответственно уменьшаем кол-во предмета в dict_ID_count
-  for (int i = 0; i < INVENTORY_SIZE; i++) {
-    if (dict_ID_count[inventory[i]] > 1) {
-      dict_ID_count[inventory[i]] -= 1;
-      inventory[i] = 0;
+  for (int i = 1; i < INVENTORY_SIZE + 1; i++) {
+    int j = INVENTORY_SIZE - i;
+    if (inventory[j] != 0 & dict_ID_count[inventory[j]] > 1) {
+      dict_ID_count[inventory[j]] -= 1;
+      inventory[j] = 0;
     }
   }
   puts("Старый\tНовый\n");
