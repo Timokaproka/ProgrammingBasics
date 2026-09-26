@@ -178,7 +178,7 @@ void count_item() {
   printf("Слоты: ");
   for (int i = 0; i < count_item; i++) {
     if (i == count_item - 1) {
-      printf("%d\n", slots[i]); // Ладно, переживу свою жадность ради красивого вывода текста.
+      printf("%d\n", slots[i]);  // Ладно, переживу свою жадность ради красивого вывода текста.
     } else {
       printf("%d; ", slots[i]);
     }
@@ -258,7 +258,7 @@ void remove_trash() {
   }
 
   printf("Было очищено %d слотов", count_trash_item);
-  
+
   pause_screen();
 }
 
@@ -268,7 +268,7 @@ void find_heaviness() {
 
   printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
   int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
-  
+
   bool any_slot = false;
 
   for (int i = 0; i < INVENTORY_SIZE; i++) {
@@ -342,8 +342,8 @@ void swap_item() {
   set_item_in_slot(0, item_id);
 
   for (int i = 0; i < INVENTORY_SIZE; i++) {
-    if (i == 0) { // <-- вот это поганый if, но я НЕ БУДУ СОХРАНЯТЬ ИЗНАЧАЛЬНЫЙ МАССИВ, потому что я тварь. Если массив будет
-                  // огромным, то это плохо сказаться на производительности, но пока что плевать, лучше съэкомнолю 4 * 10 = 40 байт памяти 😱
+    if (i == 0) {  // <-- вот это поганый if, но я НЕ БУДУ СОХРАНЯТЬ ИЗНАЧАЛЬНЫЙ МАССИВ, потому что я тварь. Если массив будет
+                   // огромным, то это плохо сказаться на производительности, но пока что плевать, лучше съэкомнолю 4 * 10 = 40 байт памяти 😱
       printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[first_slot]], inventory[first_slot], ITEM_NAMES[inventory[i]], inventory[i]);
     } else if (i == first_slot) {
       printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[0]], inventory[0], ITEM_NAMES[inventory[i]], inventory[i]);
@@ -366,7 +366,7 @@ void items_is_neighbours() {
   int second_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
 
   bool neighbours = false;
-  
+
   // Вот тут надо INVENTORY_SIZE - 1 т.к. будем идти по индексам до i + 1 и чтобы не выходить за границы массива мы будем умными (логика 6-тилетнего ребёнка)
   for (int i = 0; i < INVENTORY_SIZE - 1; i++) {
     if ((inventory[i] == first_id & inventory[i + 1] == second_id) | (inventory[i] == second_id & inventory[i + 1] == first_id)) {  // Тут буду использовать именно побитовые операции, т.к. неизвестно
@@ -480,10 +480,10 @@ void main_menu() {
     puts("[3] Посмотреть инвентарь");
     puts("[4] Положить предмет в слот");
     puts("[5] Выбросить предмет");
-    puts("[6] По вариантам");
+    puts("[6] Соседние ячейки");
     printf("\nВыберите пункт: ");
 
-    switch (interval(6, 0)) { // <-- заметили да? а вот не зря проверку то делал в interval, что min < max вот-вот всё работает!
+    switch (interval(6, 0)) {  // <-- заметили да? а вот не зря проверку то делал в interval, что min < max вот-вот всё работает!
       case 0:
         return;
       case 1:
@@ -509,7 +509,7 @@ void main_menu() {
         remove_item();
         break;
       case 6:
-        second_menu();
+        items_is_neighbours();
         break;
     }
   }
