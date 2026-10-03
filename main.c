@@ -103,7 +103,7 @@ void change_time() {
 
   // Вот это выглядит как то, что можно сделать в 2 действия, но я не представляю как. А может и нельзя 🤨
   current_hour += time_add;
-  current_day += current_hour / 24;
+  current_day += current_hour / 24; // ну за 24 часа то не бейте, очевидно, что в сутках 24 часа
   current_hour = current_hour % 24;
 
   pause_screen();
