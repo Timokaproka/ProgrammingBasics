@@ -35,14 +35,6 @@ void pause_screen() {
   _getch();
 }
 
-void clearing_buffer() {
-  int c;
-
-  while ((c = getchar()) != '\n' && c != EOF) {
-    // просто очищаем буфер
-  }
-}
-
 int int_extractor() {
   int result;
   int item_counter;
@@ -57,7 +49,15 @@ int int_extractor() {
       return result;
     }
 
-    clearing_buffer();  // очищаем буфер от всего ненужного и ужасного (типа переноса строк)
+    {  // <- это вроде "составной оператор" (он просто отделяет зону видимости, чтобы cleansing_variable освободил память после цикла
+       // и её нельзя было использовать вне этой области)
+
+      // очищаем буфер от всего ненужного и ужасного (типа переноса строк)
+      int cleansing_variable;
+      while ((cleansing_variable = getchar()) != '\n' && cleansing_variable != EOF) {
+        // просто очищаем буфер
+      }
+    }
     puts("Введено не только число");
   }
 }
@@ -103,7 +103,7 @@ void change_time() {
 
   // Вот это выглядит как то, что можно сделать в 2 действия, но я не представляю как. А может и нельзя 🤨
   current_hour += time_add;
-  current_day += current_hour / 24; // ну за 24 часа то не бейте, очевидно, что в сутках 24 часа
+  current_day += current_hour / 24;  // ну за 24 часа то не бейте, очевидно, что в сутках 24 часа
   current_hour = current_hour % 24;
 
   pause_screen();
