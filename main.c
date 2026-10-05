@@ -103,7 +103,7 @@ void change_time() {
 
   // Вот это выглядит как то, что можно сделать в 2 действия, но я не представляю как. А может и нельзя 🤨
   current_hour += time_add;
-  current_day += current_hour / 24; // ну за 24 часа то не бейте, очевидно, что в сутках 24 часа
+  current_day += current_hour / 24;  // ну за 24 часа то не бейте, очевидно, что в сутках 24 часа
   current_hour = current_hour % 24;
 
   pause_screen();
@@ -155,293 +155,205 @@ void remove_item() {  // удалить предмет из слота
   set_item_in_slot(slot, 0);  // 0 - отсутствие предмета в слоте
   pause_screen();
 }
-// // ВСЁ ДАЛЬШЕ ДЛЯ 6-го пункта!! UPD: НЕ БУДЕТ НИКАКОГО 6-го ПУНКТА 😱😱😱
-// void count_item() {
-//   system("cls");
-//   puts("РЕВИЗИЯ РЕСУРСОВ\n");
-//
-//   printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
-//   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
-//
-//   int count_item = 0;
-//   int slots[INVENTORY_SIZE] = {0};
-//
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     if (inventory[i] == item_id) {
-//       slots[count_item] = i;
-//       count_item += 1;
-//     }
-//   }
-//
-//   printf("\nКол-во: %d\n", count_item);
-//
-//   printf("Слоты: ");
-//   for (int i = 0; i < count_item; i++) {
-//     if (i == count_item - 1) {
-//       printf("%d\n", slots[i]);  // Ладно, переживу свою жадность ради красивого вывода текста.
-//     } else {
-//       printf("%d; ", slots[i]);
-//     }
-//   }
-//   pause_screen();
-// }
-//
-// void sort_inv() {
-//   system("cls");
-//   puts("СОРТИРОВКА ИНВЕНТАРЬ\n");
-//
-//   int temp_inv[INVENTORY_SIZE] = {0};
-//   int temp_item = 0;
-//
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     if (inventory[i] != 0) {
-//       temp_inv[temp_item] = inventory[i];
-//       temp_item += 1;
-//     }
-//   }
-//
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[temp_inv[i]], temp_inv[i]);
-//     inventory[i] = temp_inv[i];
-//   }
-//
-//   pause_screen();
-// }
-//
-// void inversion_inv() {
-//   system("cls");
-//   puts("ИНВЕРСИЯ ИНВЕНТАРЬ\n");
-//
-//   for (int i = 0; i < INVENTORY_SIZE / 2; i++) {
-//     int temp_item = inventory[i];
-//     inventory[i] = inventory[INVENTORY_SIZE - 1 - i];
-//     inventory[INVENTORY_SIZE - 1 - i] = temp_item;
-//   }
-//
-//   for (int j = 1; j < INVENTORY_SIZE + 1; j++) {
-//     printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j - 1, ITEM_NAMES[inventory[INVENTORY_SIZE - j]], inventory[INVENTORY_SIZE - j], ITEM_NAMES[inventory[j - 1]], inventory[j - 1]);
-//   }
-//
-//   pause_screen();
-// }
-//
-// void unique_items_list() {
-//   system("cls");
-//   puts("УНИКАЛЬНОСТЬ ПРЕДМЕТОВ\n");
-//
-//   // Получаем массив с кол-вом предметов, где i - id предмета, а dict_ID_count[i] - кол-во предмета с этим ID в инвентаре
-//   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
-//   calculate_items_count(&dict_ID_count);
-//
-//   for (int j = 1; j < TOTAL_NUMBER_OF_ITEMS; j++) {
-//     if (dict_ID_count[j] != 0) {  // <-- чтобы не выводить нулевые элементы.
-//       printf("%s(%d): %d\n", ITEM_NAMES[j], j, dict_ID_count[j]);
-//     }
-//   }
-//
-//   pause_screen();
-// }
-//
-// void remove_trash() {
-//   system("cls");
-//   puts("ОЧИСТКА ОТ МУСОРА\n");
-//
-//   printf("Введите ID предмета (от %d до %d): ", 1, TOTAL_NUMBER_OF_ITEMS - 1);
-//   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
-//
-//   int count_trash_item = 0;
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     if (inventory[i] == item_id) {
-//       count_trash_item += 1;
-//       set_item_in_slot(i, 0);
-//     }
-//   }
-//
-//   printf("Было очищено %d слотов", count_trash_item);
-//
-//   pause_screen();
-// }
-//
-// void find_heaviness() {
-//   system("cls");
-//   puts("ПОИСК ТЯЖЕСТЕЙ\n");
-//
-//   printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
-//   int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
-//
-//   bool any_slot = false;
-//
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     if (inventory[i] > item_id) {
-//       any_slot = true;
-//       printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);
-//     }
-//   }
-//
-//   if (!any_slot) {
-//     puts("Нет таких предметов в инвентаре\n");
-//   }
-//
-//   pause_screen();
-// }
-//
-// void favorite_item() {
-//   system("cls");
-//   puts("ЛЮБИМЫЙ ПРЕДМЕТ\n");
-//
-//   int max_id = 0;
-//   int max_count = 0;
-//
-//   // Собираю кол-во предметов из инвентаря
-//   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
-//   calculate_items_count(&dict_ID_count);
-//
-//   for (int i = 1; i < TOTAL_NUMBER_OF_ITEMS; i++) {
-//     if (max_count < dict_ID_count[i]) {
-//       max_count = dict_ID_count[i];
-//       max_id = i;
-//     }
-//   }
-//
-//   if (max_id == 0) {
-//     printf("Инвентарь пустой. Нет любимых предметов\n");
-//   } else {
-//     printf("Любимый предмет: %s(%d) - %d шт.\n", ITEM_NAMES[max_id], max_id, max_count);
-//   }
-//
-//   pause_screen();
-// }
-//
-// void swap_item() {
-//   system("cls");
-//   puts("ПЕРЕНОС ПРЕДМЕТА В БЫСТРЫЙ СЛОТ\n");
-//
-//   printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
-//   int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
-//
-//   int first_slot = -1;
-//
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     if (inventory[i] == item_id) {
-//       first_slot = i;
-//       break;
-//     }
-//   }
-//
-//   if (first_slot == -1) {
-//     puts("Нет таких предметов в инвентаре\n");
-//     pause_screen();
-//     return;
-//   } else if (first_slot == 0) {
-//     puts("Предмет уже в быстром слоте!\n");
-//     pause_screen();
-//     return;
-//   }
-//
-//   set_item_in_slot(first_slot, inventory[0]);
-//   set_item_in_slot(0, item_id);
-//
-//   for (int i = 0; i < INVENTORY_SIZE; i++) {
-//     if (i == 0) {  // <-- вот это поганый if, но я НЕ БУДУ СОХРАНЯТЬ ИЗНАЧАЛЬНЫЙ МАССИВ, потому что я тварь. Если массив будет
-//                    // огромным, то это может плохо сказаться на производительности (а может и нет), но пока что плевать, лучше съэкомнолю 4 * 10 = 40 байт памяти 😱
-//       printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[first_slot]], inventory[first_slot], ITEM_NAMES[inventory[i]], inventory[i]);
-//     } else if (i == first_slot) {
-//       printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[0]], inventory[0], ITEM_NAMES[inventory[i]], inventory[i]);
-//     } else {
-//       printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[inventory[i]], inventory[i]);
-//     }
-//   }
-//
-//   pause_screen();
-// }
+// ВСЁ ДАЛЬШЕ ДЛЯ 6-го пункта!! UPD: НЕ БУДЕТ НИКАКОГО 6-го ПУНКТА 😱😱😱
+void count_item() {
+  system("cls");
+  puts("РЕВИЗИЯ РЕСУРСОВ\n");
 
-// 10-тый вариант
-// // И опять мне придётся использовать dict_ID_count (но может есть вариант лучше).
-// void remove_duplicates_items() {
-//   system("cls");
-//   puts("ТОЛЬКО УНИКАЛЬНЫЕ ПРЕДМЕТЫ\n");
-//
-//   int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
-//   calculate_items_count(&dict_ID_count);
-//
-//   // Это просто сохраняет старый инвентарь. Для вывода в конче
-//   int old_inventory[INVENTORY_SIZE];
-//   for (int x = 0; x < INVENTORY_SIZE; x++) {
-//     old_inventory[x] = inventory[x];
-//   }
-//
-//   // Удаляем предмет из слота, если кол-во предмета > 1
-//   // и соответственно уменьшаем кол-во предмета в dict_ID_count
-//   for (int i = 1; i < INVENTORY_SIZE + 1; i++) {
-//     int j = INVENTORY_SIZE - i;
-//     if (inventory[j] != 0 && dict_ID_count[inventory[j]] > 1) {  // передумал использовать тут битовый оператор, думаю логический будет более понятным и не менее производительным.
-//       dict_ID_count[inventory[j]] -= 1;
-//       inventory[j] = 0;
-//     }
-//   }
-//
-//   for (int j = 0; j < INVENTORY_SIZE; j++) {
-//     printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j, ITEM_NAMES[old_inventory[j]], old_inventory[j], ITEM_NAMES[inventory[j]], inventory[j]);
-//   }
-//
-//   pause_screen();
-// }
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
+  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
 
+  int count_item = 0;
+  int slots[INVENTORY_SIZE] = {0};
 
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    if (inventory[i] == item_id) {
+      slots[count_item] = i;
+      count_item += 1;
+    }
+  }
 
-// void second_menu() {
-//   while (true) {
-//     system("cls");
-//     puts("[0] В главное меню");
-//     puts("[1] Ревизия ресурсов");
-//     puts("[2] Сортировка инвентаря");
-//     puts("[3] Инверсия инвентаря");
-//     puts("[4] Уникальные предметы");
-//     puts("[5] Выбросить мусор");
-//     puts("[6] Поиск тяжестей");
-//     puts("[7] Любимый ресурс");
-//     puts("[8] Быстрый доступ");
-//     puts("[9] Соседние ячейки");
-//     puts("[10] Удалить дубликаты");
-//     printf("\nВыберите пункт: ");
-//
-//     switch (interval(0, 10)) {
-//       case 0:
-//         return;
-//       case 1:
-//         count_item();
-//         break;
-//       case 2:
-//         sort_inv();
-//         break;
-//       case 3:
-//         inversion_inv();
-//         break;
-//       case 4:
-//         unique_items_list();
-//         break;
-//       case 5:
-//         remove_trash();
-//         break;
-//       case 6:
-//         find_heaviness();
-//         break;
-//       case 7:
-//         favorite_item();
-//         break;
-//       case 8:
-//         swap_item();
-//         break;
-//       case 9:
-//         items_is_neighbours();
-//         break;
-//       case 10:
-//         remove_duplicates_items();
-//         break;
-//     }
-//   }
-// }
+  printf("\nКол-во: %d\n", count_item);
 
+  printf("Слоты: ");
+  for (int i = 0; i < count_item; i++) {
+    if (i == count_item - 1) {
+      printf("%d\n", slots[i]);  // Ладно, переживу свою жадность ради красивого вывода текста.
+    } else {
+      printf("%d; ", slots[i]);
+    }
+  }
+  pause_screen();
+}
+
+void sort_inv() {
+  system("cls");
+  puts("СОРТИРОВКА ИНВЕНТАРЬ\n");
+
+  int temp_inv[INVENTORY_SIZE] = {0};
+  int temp_item = 0;
+
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    if (inventory[i] != 0) {
+      temp_inv[temp_item] = inventory[i];
+      temp_item += 1;
+    }
+  }
+
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[temp_inv[i]], temp_inv[i]);
+    inventory[i] = temp_inv[i];
+  }
+
+  pause_screen();
+}
+
+void inversion_inv() {
+  system("cls");
+  puts("ИНВЕРСИЯ ИНВЕНТАРЬ\n");
+
+  for (int i = 0; i < INVENTORY_SIZE / 2; i++) {
+    int temp_item = inventory[i];
+    inventory[i] = inventory[INVENTORY_SIZE - 1 - i];
+    inventory[INVENTORY_SIZE - 1 - i] = temp_item;
+  }
+
+  for (int j = 1; j < INVENTORY_SIZE + 1; j++) {
+    printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j - 1, ITEM_NAMES[inventory[INVENTORY_SIZE - j]], inventory[INVENTORY_SIZE - j], ITEM_NAMES[inventory[j - 1]], inventory[j - 1]);
+  }
+
+  pause_screen();
+}
+
+void unique_items_list() {
+  system("cls");
+  puts("УНИКАЛЬНОСТЬ ПРЕДМЕТОВ\n");
+
+  // Получаем массив с кол-вом предметов, где i - id предмета, а dict_ID_count[i] - кол-во предмета с этим ID в инвентаре
+  int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
+  calculate_items_count(&dict_ID_count);
+
+  for (int j = 1; j < TOTAL_NUMBER_OF_ITEMS; j++) {
+    if (dict_ID_count[j] != 0) {  // <-- чтобы не выводить нулевые элементы.
+      printf("%s(%d): %d\n", ITEM_NAMES[j], j, dict_ID_count[j]);
+    }
+  }
+
+  pause_screen();
+}
+
+void remove_trash() {
+  system("cls");
+  puts("ОЧИСТКА ОТ МУСОРА\n");
+
+  printf("Введите ID предмета (от %d до %d): ", 1, TOTAL_NUMBER_OF_ITEMS - 1);
+  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
+
+  int count_trash_item = 0;
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    if (inventory[i] == item_id) {
+      count_trash_item += 1;
+      set_item_in_slot(i, 0);
+    }
+  }
+
+  printf("Было очищено %d слотов", count_trash_item);
+
+  pause_screen();
+}
+
+void find_heaviness() {
+  system("cls");
+  puts("ПОИСК ТЯЖЕСТЕЙ\n");
+
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
+  int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
+
+  bool any_slot = false;
+
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    if (inventory[i] > item_id) {
+      any_slot = true;
+      printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);
+    }
+  }
+
+  if (!any_slot) {
+    puts("Нет таких предметов в инвентаре\n");
+  }
+
+  pause_screen();
+}
+
+void favorite_item() {
+  system("cls");
+  puts("ЛЮБИМЫЙ ПРЕДМЕТ\n");
+
+  int max_id = 0;
+  int max_count = 0;
+
+  // Собираю кол-во предметов из инвентаря
+  int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
+  calculate_items_count(&dict_ID_count);
+
+  for (int i = 1; i < TOTAL_NUMBER_OF_ITEMS; i++) {
+    if (max_count < dict_ID_count[i]) {
+      max_count = dict_ID_count[i];
+      max_id = i;
+    }
+  }
+
+  if (max_id == 0) {
+    printf("Инвентарь пустой. Нет любимых предметов\n");
+  } else {
+    printf("Любимый предмет: %s(%d) - %d шт.\n", ITEM_NAMES[max_id], max_id, max_count);
+  }
+
+  pause_screen();
+}
+
+void swap_item() {
+  system("cls");
+  puts("ПЕРЕНОС ПРЕДМЕТА В БЫСТРЫЙ СЛОТ\n");
+
+  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
+  int item_id = interval(1, TOTAL_NUMBER_OF_ITEMS - 1);
+
+  int first_slot = -1;
+
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    if (inventory[i] == item_id) {
+      first_slot = i;
+      break;
+    }
+  }
+
+  if (first_slot == -1) {
+    puts("Нет таких предметов в инвентаре\n");
+    pause_screen();
+    return;
+  } else if (first_slot == 0) {
+    puts("Предмет уже в быстром слоте!\n");
+    pause_screen();
+    return;
+  }
+
+  set_item_in_slot(first_slot, inventory[0]);
+  set_item_in_slot(0, item_id);
+
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    if (i == 0) {  // <-- вот это поганый if, но я НЕ БУДУ СОХРАНЯТЬ ИЗНАЧАЛЬНЫЙ МАССИВ, потому что я тварь. Если массив будет
+                   // огромным, то это может плохо сказаться на производительности (а может и нет), но пока что плевать, лучше съэкомнолю 4 * 10 = 40 байт памяти 😱
+      printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[first_slot]], inventory[first_slot], ITEM_NAMES[inventory[i]], inventory[i]);
+    } else if (i == first_slot) {
+      printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[0]], inventory[0], ITEM_NAMES[inventory[i]], inventory[i]);
+    } else {
+      printf("Слот[%d]: %s(%d) ---> %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i], ITEM_NAMES[inventory[i]], inventory[i]);
+    }
+  }
+
+  pause_screen();
+}
 
 // 9-тый (мой) вариант
 
@@ -472,6 +384,91 @@ void items_is_neighbours() {
   pause_screen();
 }
 
+// 10 - тый вариант
+// И опять мне придётся использовать dict_ID_count (но может есть вариант лучше).
+void remove_duplicates_items() {
+  system("cls");
+  puts("ТОЛЬКО УНИКАЛЬНЫЕ ПРЕДМЕТЫ\n");
+
+  int dict_ID_count[TOTAL_NUMBER_OF_ITEMS] = {0};
+  calculate_items_count(&dict_ID_count);
+
+  // Это просто сохраняет старый инвентарь. Для вывода в конче
+  int old_inventory[INVENTORY_SIZE];
+  for (int x = 0; x < INVENTORY_SIZE; x++) {
+    old_inventory[x] = inventory[x];
+  }
+
+  // Удаляем предмет из слота, если кол-во предмета > 1
+  // и соответственно уменьшаем кол-во предмета в dict_ID_count
+  for (int i = 1; i < INVENTORY_SIZE + 1; i++) {
+    int j = INVENTORY_SIZE - i;
+    if (inventory[j] != 0 && dict_ID_count[inventory[j]] > 1) {  // передумал использовать тут битовый оператор, думаю логический будет более понятным и не менее производительным.
+      dict_ID_count[inventory[j]] -= 1;
+      inventory[j] = 0;
+    }
+  }
+
+  for (int j = 0; j < INVENTORY_SIZE; j++) {
+    printf("Слот[%d]: %s(%d) ---> %s(%d)\n", j, ITEM_NAMES[old_inventory[j]], old_inventory[j], ITEM_NAMES[inventory[j]], inventory[j]);
+  }
+
+  pause_screen();
+}
+
+void second_menu() {
+  while (true) {
+    system("cls");
+    puts("[0] В главное меню");
+    puts("[1] Ревизия ресурсов");
+    puts("[2] Сортировка инвентаря");
+    puts("[3] Инверсия инвентаря");
+    puts("[4] Уникальные предметы");
+    puts("[5] Выбросить мусор");
+    puts("[6] Поиск тяжестей");
+    puts("[7] Любимый ресурс");
+    puts("[8] Быстрый доступ");
+    puts("[9] Соседние ячейки");
+    puts("[10] Удалить дубликаты");
+    printf("\nВыберите пункт: ");
+
+    switch (interval(0, 10)) {
+      case 0:
+        return;
+      case 1:
+        count_item();
+        break;
+      case 2:
+        sort_inv();
+        break;
+      case 3:
+        inversion_inv();
+        break;
+      case 4:
+        unique_items_list();
+        break;
+      case 5:
+        remove_trash();
+        break;
+      case 6:
+        find_heaviness();
+        break;
+      case 7:
+        favorite_item();
+        break;
+      case 8:
+        swap_item();
+        break;
+      case 9:
+        items_is_neighbours();
+        break;
+      case 10:
+        remove_duplicates_items();
+        break;
+    }
+  }
+}
+
 void main_menu() {
   while (true) {
     system("cls");
@@ -481,7 +478,7 @@ void main_menu() {
     puts("[3] Посмотреть инвентарь");
     puts("[4] Положить предмет в слот");
     puts("[5] Выбросить предмет");
-    puts("[6] Соседние ячейки");
+    puts("[6] По вариантам");
     printf("\nВыберите пункт: ");
 
     switch (interval(0, 6)) {
@@ -510,7 +507,7 @@ void main_menu() {
         remove_item();
         break;
       case 6:
-        items_is_neighbours();
+        second_menu();
         break;
     }
   }
