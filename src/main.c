@@ -11,7 +11,7 @@
 int current_day = 1;  // Это и объявление и инициализация (а значит и определение)
 int current_hour = 8;
 int inventory[INVENTORY_SIZE] = {7, 2, 9, 2, 4, 1, 8, 3, 6, 5};  // инвентарь
-
+char username[32 + 1];
 // А ТУТ МНЕ GEMINI ВООБЩЕ ГЕНИАЛЬНУЮ ИДЕЮ ПОДСКАЗАЛ. Кароче: const char *
 // будет брать начальный БАЙТ строки из ПАМЯТИ. Любая строка заканчивается на
 // \0 (вроде нулевой символ), т.к. это просто массив из char. Тот же printf
@@ -36,6 +36,14 @@ void pause_screen() {
   _getch();
 }
 
+void clearing_buffer() {
+  int c;
+
+  while ((c = getchar()) != '\n' && c != EOF) {
+    // просто очищаем буфер
+  }
+}
+
 int int_extractor() {
   int result;
   int item_counter;
@@ -50,15 +58,8 @@ int int_extractor() {
       return result;
     }
 
-    {  // <- это вроде "составной оператор" (он просто отделяет зону видимости, чтобы cleansing_variable освободил память после цикла
-       // и её нельзя было использовать вне этой области)
+    clearing_buffer();
 
-      // очищаем буфер от всего ненужного и ужасного (типа переноса строк)
-      int cleansing_variable;
-      while ((cleansing_variable = getchar()) != '\n' && cleansing_variable != EOF) {
-        // просто очищаем буфер
-      }
-    }
     puts("Введено не только число");
   }
 }
@@ -77,6 +78,16 @@ int interval(int min, int max) {
     }
     printf("Число должно быть от %d до %d!\n", min, max);
   }
+}
+
+void get_username() {
+  printf("Введите своё имя (до 32 символов): ");
+  if (fgets(username, sizeof(username), stdin) != NULL) {
+    // Удаление символа перевода строки, если он попал в буфер
+    username[strcspn(username, "\r\n")] = '\0';
+  }
+  clearing_buffer();  // очищаем буфер
+  // Великий Тимофей Владиславович сказал, что clearing_buffer как отдельная функция не нужна, а в итоге то она пригодидлась, зря убирал её(
 }
 
 void change_time() {
@@ -184,6 +195,7 @@ void items_is_neighbours() {
 void main_menu() {
   while (true) {
     system("cls");
+    printf("%s\n", username);
     puts("[0] Выход");
     puts("[1] Посмотреть на часы");
     puts("[2] Промотать время (поработать)");
@@ -222,6 +234,7 @@ void main_menu() {
 
 int main(int argc, char* argv[]) {
   SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
+  get_username();
   main_menu();
   return EXIT_SUCCESS;
 }
