@@ -165,7 +165,9 @@ void items_is_neighbours() {
 
   // Вот тут надо INVENTORY_SIZE - 1 т.к. будем идти по индексам до i + 1 и чтобы не выходить за границы массива мы будем умными (логика 6-тилетнего ребёнка)
   for (int i = 0; i < INVENTORY_SIZE - 1; i++) {
-    if ((inventory[i] == first_id && inventory[i + 1] == second_id) || (inventory[i] == second_id && inventory[i + 1] == first_id)) {  // Не буду я использовать побитовые операции. Нахрен надо
+    bool cond1 = (inventory[i] == first_id && inventory[i + 1] == second_id);
+    bool cond2 = (inventory[i] == second_id && inventory[i + 1] == first_id);
+    if (cond1 || cond2) { // Наверное, так будет легче читать условия
       printf("Найдены ID: %d, %d\n", i, i + 1);
       neighbours = true;
     }
