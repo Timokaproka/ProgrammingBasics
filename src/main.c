@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#define HOURS_IN_DAY 24
 #define INVENTORY_SIZE 10         // размер инвентаря
 #define TOTAL_NUMBER_OF_ITEMS 10  // просто кол-во предметов, которые есть. Вообще наверное стоит сделать список или enum, но пока пофик.
 
@@ -87,8 +88,8 @@ void change_time() {
 
   // Вот это выглядит как то, что можно сделать в 2 действия, но я не представляю как. А может и нельзя 🤨
   current_hour += time_add;
-  current_day += current_hour / 24;  // ну за 24 часа то не бейте, очевидно, что в сутках 24 часа
-  current_hour = current_hour % 24;
+  current_day += current_hour / HOURS_IN_DAY;
+  current_hour = current_hour % HOURS_IN_DAY;
 
   pause_screen();
 }
@@ -167,7 +168,7 @@ void items_is_neighbours() {
   for (int i = 0; i < INVENTORY_SIZE - 1; i++) {
     bool cond1 = (inventory[i] == first_id && inventory[i + 1] == second_id);
     bool cond2 = (inventory[i] == second_id && inventory[i + 1] == first_id);
-    if (cond1 || cond2) { // Наверное, так будет легче читать условия
+    if (cond1 || cond2) {  // Наверное, так будет легче читать условия
       printf("Найдены ID: %d, %d\n", i, i + 1);
       neighbours = true;
     }
@@ -197,7 +198,7 @@ void main_menu() {
         return;
       case 1:
         system("cls");
-        printf("Текущее время: День %d, %02d:00\n", current_day, current_hour); // не думаю, что стоит выносить это в отдельную функцию
+        printf("Текущее время: День %d, %02d:00\n", current_day, current_hour);  // не думаю, что стоит выносить это в отдельную функцию
         pause_screen();
         break;
       case 2:
