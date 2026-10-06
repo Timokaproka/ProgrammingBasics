@@ -93,6 +93,15 @@ void change_time() {
   pause_screen();
 }
 
+void view_inventory() {
+  system("cls");
+  puts("ИНВЕНТАРЬ\n");
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);  // Когда я вижу, что этот массив указателей реально работает у меня полюция под окном проходит.
+  }
+  pause_screen();
+}
+
 void set_item_in_slot(int slot, int item_id) {  // вообще думал, что для remove_item буду использовать give_item, с необязательными аргументами,
                                                 // но C сКазал, что я кАзуал и аРгумент или есть или нет, тАк что пришлоСь делать Интерфейс (вроде так называется)
                                                 // Кароче не будьте казуалами и делайте нормально
@@ -186,19 +195,14 @@ void main_menu() {
         return;
       case 1:
         system("cls");
-        printf("Текущее время: День %d, %02d:00\n", current_day, current_hour);
+        printf("Текущее время: День %d, %02d:00\n", current_day, current_hour); // не думаю, что стоит выносить это в отдельную функцию
         pause_screen();
         break;
       case 2:
         change_time();
         break;
       case 3:
-        system("cls");
-        puts("ИНВЕНТАРЬ\n");
-        for (int i = 0; i < INVENTORY_SIZE; i++) {
-          printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);  // Когда я вижу, что этот массив указателей реально работает у меня полюция под окном проходит.
-        }
-        pause_screen();
+        view_inventory();
         break;
       case 4:
         give_item();
