@@ -1,13 +1,16 @@
 #include <conio.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
 
-#define HOURS_IN_DAY 24
-#define INVENTORY_SIZE 10         // размер инвентаря
-#define TOTAL_NUMBER_OF_ITEMS 10  // просто кол-во предметов, которые есть. Вообще наверное стоит сделать список или enum, но пока пофик.
+#define BUFFER_SIZE 256  // размер буфера для считывания в файлах
 
+#define HOURS_IN_DAY 24              // кол-во часов в сутках
+#define INVENTORY_SIZE 10            // размер инвентаря
+#define STANDART_NUMBER_OF_ITEMS 10  // просто кол-во предметов, которые есть. Вообще наверное стоит сделать список или enum, но пока пофик.
+int total_number_of_items;
 int current_day = 1;  // Это и объявление и инициализация (а значит и определение)
 int current_hour = 8;
 int inventory[INVENTORY_SIZE] = {7, 2, 9, 2, 4, 1, 8, 3, 6, 5};  // инвентарь
@@ -17,9 +20,9 @@ char username[32 + 1];
 // \0 (вроде нулевой символ), т.к. это просто массив из char. Тот же printf
 // БУДЕТ БРАТЬ АДРЕС ПЕРВОГО СИМВОЛА И идти до конца строки (до \0). Так что
 // всё будет просто чикибамбони и в итоге будет выводиться вся строка.
-// А вот [i] тут выступает просто в роли жёсткой привязки порядкового номера. Кароче ITEM_NAMES[0] всегда будет "Пусто" (точнее указатель на первый байт в патями этой строки... и т.д. и т.п.)
+// А вот [i] тут выступает просто в роли жёсткой привязки порядкового номера. Кароче STANDART_ITEM_NAMES[0] всегда будет "Пусто" (точнее указатель на первый байт в патями этой строки... и т.д. и т.п.)
 // в независимости от того, куда я запиху этот [0] = "Пусто", хоть на последнее место.
-const char* const ITEM_NAMES[TOTAL_NUMBER_OF_ITEMS] = {
+const char* const STANDART_ITEM_NAMES[STANDART_NUMBER_OF_ITEMS] = {
     [0] = "Пусто",
     [1] = "Дерево",
     [2] = "Камень",
@@ -30,6 +33,8 @@ const char* const ITEM_NAMES[TOTAL_NUMBER_OF_ITEMS] = {
     [7] = "Палка",
     [8] = "Веревка",
     [9] = "Удочка"};
+
+// char item_names[MAX_ITEM][MAX_NAME_LEN];
 
 void pause_screen() {
   puts("\nНажмите любую клавишу для возврата...");
@@ -90,6 +95,79 @@ void get_username() {
   // Великий Тимофей Владиславович сказал, что clearing_buffer как отдельная функция не нужна, а в итоге то она пригодидлась, зря убирал её(
 }
 
+int safe_fopen(FILE** file, const char* filename, const char* mode) {  // <- указатель на указатель 🥶
+  if (file == NULL) {
+    return EINVAL;  // <- предположим, что это важно. Наверное, потому что память вещь опасная и выходить за рамки своей не очень хочется
+  }
+
+  errno = 0;                      // Сбрасываем ошибку перед вызовом (вдруг там есть старая)
+  *file = fopen(filename, mode);  // тут уже разыменовали указатель и теперь это просто указатель на экземпляр FILE
+
+  if (*file == NULL) {
+    return (errno != 0) ? errno : EIO;  // <- возвращаем ошибку. Если errno осталось 0, но файл мы так и не смогли прочитать, то вызываем "обощённую ошибку ввода-вывода"
+  }
+  return 0;  // а тут всё круто
+}
+
+bool items_list_export() {
+  bool return_status = true;
+  FILE* items_file;
+  int error_code = safe_fopen(&items_file, "items.txt", "w");
+
+  if (error_code == EACCES) {
+    puts("Невозможно создать файл items.txt: ОТКАЗАНО В ДОСТУПЕ");
+    return_status = false;
+    pause_screen();
+  } else if (error_code != 0) {
+    return_status = false;
+    puts("ОШИБКА ПРИ СОЗДАНИИ ФАЙЛА");
+    perror("items.txt");
+  }
+  for (int i = 0; i < STANDART_NUMBER_OF_ITEMS; i++) {
+    char str[BUFFER_SIZE];
+    snprintf(str, BUFFER_SIZE, "%d", i);  // <- преобразую в строку i, чтобы нормально записать в файл предметы по индексам (а можно и не писать и привязать номер строки к номеру предмета в массиве)
+                                          // Можно, а зачем?
+    fputs(str, items_file);
+    fputc(' ', items_file);
+    fputs(STANDART_ITEM_NAMES[i], items_file);
+    fputc('\n', items_file);
+  }
+  fclose(items_file);
+
+  return return_status;
+}
+
+void items_list_import() {
+  FILE* items_file;
+  int error_code = safe_fopen(&items_file, "items.txt", "r");
+
+  switch (error_code) {
+    case EACCES: {
+      puts("items.txt: ОТКАЗАНО В ДОСТУПЕ");
+      pause_screen();
+      return;
+    }
+    case ENOENT: {
+      int err = items_list_export();
+      if (err != true) {
+        return;
+      }
+    }
+  }
+
+  char line[BUFFER_SIZE];
+  int line_number = 1;
+
+  while (fgets(line, BUFFER_SIZE, items_file) != NULL) {
+    line[strcspn(line, "\r\n")] = '\0';
+
+    printf("Строка %d: %s\n", line_number, line);
+    line_number++;
+  }
+
+  fclose(items_file);
+}
+
 void change_time() {
   system("cls");
   puts("РАБОТА\n");
@@ -109,7 +187,7 @@ void view_inventory() {
   system("cls");
   puts("ИНВЕНТАРЬ\n");
   for (int i = 0; i < INVENTORY_SIZE; i++) {
-    printf("Слот[%d]: %s(%d)\n", i, ITEM_NAMES[inventory[i]], inventory[i]);  // Когда я вижу, что этот массив указателей реально работает у меня полюция под окном проходит.
+    printf("Слот[%d]: %s(%d)\n", i, STANDART_ITEM_NAMES[inventory[i]], inventory[i]);  // Когда я вижу, что этот массив указателей реально работает у меня полюция под окном проходит.
   }
   pause_screen();
 }
@@ -118,7 +196,7 @@ void set_item_in_slot(int slot, int item_id) {  // вообще думал, чт
                                                 // но C сКазал, что я кАзуал и аРгумент или есть или нет, тАк что пришлоСь делать Интерфейс (вроде так называется)
                                                 // Кароче не будьте казуалами и делайте нормально
 
-  if ((slot >= 0 && slot < INVENTORY_SIZE) && (item_id >= 0 && item_id < TOTAL_NUMBER_OF_ITEMS)) {  // если когда-нибудь забуду, добавить проверку для аргументов, при вызове функции
+  if ((slot >= 0 && slot < INVENTORY_SIZE) && (item_id >= 0 && item_id < total_number_of_items)) {  // если когда-нибудь забуду, добавить проверку для аргументов, при вызове функции
     inventory[slot] = item_id;
   }
 }
@@ -141,9 +219,9 @@ void give_item() {  // выдача предмета
   // }
 
   puts("Что надо?");
-  printf("Введите ID предмета (от %d до %d): ", 0, TOTAL_NUMBER_OF_ITEMS - 1);
+  printf("Введите ID предмета (от %d до %d): ", 0, total_number_of_items - 1);
 
-  int item_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);  // Зачем в пустой слот опять ложить воздух 🤔. UPD: потому что ты не должен проверять предмет в слоте 🙄🙄🙄 тип бошш челл
+  int item_id = interval(0, total_number_of_items - 1);  // Зачем в пустой слот опять ложить воздух 🤔. UPD: потому что ты не должен проверять предмет в слоте 🙄🙄🙄 тип бошш челл
   set_item_in_slot(slot, item_id);
 
   pause_screen();
@@ -167,11 +245,11 @@ void items_is_neighbours() {
   system("cls");
   puts("ПРОВЕРКА СОСЕДЕЙ ПО ID\n");
 
-  printf("Первый ID (от 0 до %d): ", TOTAL_NUMBER_OF_ITEMS - 1);
-  int first_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
+  printf("Первый ID (от 0 до %d): ", total_number_of_items - 1);
+  int first_id = interval(0, total_number_of_items - 1);
 
-  printf("Второй ID (от 0 до %d): ", TOTAL_NUMBER_OF_ITEMS - 1);
-  int second_id = interval(0, TOTAL_NUMBER_OF_ITEMS - 1);
+  printf("Второй ID (от 0 до %d): ", total_number_of_items - 1);
+  int second_id = interval(0, total_number_of_items - 1);
 
   bool neighbours = false;
 
@@ -234,7 +312,10 @@ void main_menu() {
 
 int main(int argc, char* argv[]) {
   SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
-  get_username();
-  main_menu();
+  // get_username();
+  // main_menu();
+  // items_list();
+  items_list_export();
+  pause_screen();
   return EXIT_SUCCESS;
 }
