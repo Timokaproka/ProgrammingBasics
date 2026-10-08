@@ -3,15 +3,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <windows.h>
 
 #define BUFFER_SIZE 256  // размер буфера для считывания в файлах
+#define READ_CHUNK_SIZE 8192
 
 #define HOURS_IN_DAY 24              // кол-во часов в сутках
 #define INVENTORY_SIZE 10            // размер инвентаря
 #define STANDART_NUMBER_OF_ITEMS 10  // просто кол-во предметов, которые есть. Вообще наверное стоит сделать список или enum, но пока пофик.
-int total_number_of_items;
-int current_day = 1;  // Это и объявление и инициализация (а значит и определение)
+int current_day = 1;                 // Это и объявление и инициализация (а значит и определение)
 int current_hour = 8;
 int inventory[INVENTORY_SIZE] = {7, 2, 9, 2, 4, 1, 8, 3, 6, 5};  // инвентарь
 char username[32 + 1];
@@ -34,7 +35,8 @@ const char* const STANDART_ITEM_NAMES[STANDART_NUMBER_OF_ITEMS] = {
     [8] = "Веревка",
     [9] = "Удочка"};
 
-// char item_names[MAX_ITEM][MAX_NAME_LEN];
+char** items_names = NULL;
+int total_number_of_items = 0;
 
 void pause_screen() {
   puts("\nНажмите любую клавишу для возврата...");
@@ -109,6 +111,32 @@ int safe_fopen(FILE** file, const char* filename, const char* mode) {  // <- у�
   return 0;  // а тут всё круто
 }
 
+int count_lines_in_file(FILE* file) {
+  if (file == NULL) {
+    return 0;
+  }
+
+  char buffer[READ_CHUNK_SIZE];
+  int lines = 0;
+  size_t bytes_read;
+  char last_char = '\n';
+
+  while ((bytes_read = fread(buffer, 1, READ_CHUNK_SIZE, file)) > 0) {
+    for (size_t i = 0; i < bytes_read; i++) {
+      if (buffer[i] == '\n') {
+        lines++;
+      }
+    }
+    last_char = buffer[bytes_read - 1];
+  }
+
+  if (last_char != '\n') {
+    lines++;
+  }
+
+  return lines;
+}
+
 bool items_list_export() {
   bool return_status = true;
   FILE* items_file;
@@ -123,6 +151,7 @@ bool items_list_export() {
     puts("ОШИБКА ПРИ СОЗДАНИИ ФАЙЛА");
     perror("items.txt");
   }
+
   for (int i = 0; i < STANDART_NUMBER_OF_ITEMS; i++) {
     char str[BUFFER_SIZE];
     snprintf(str, BUFFER_SIZE, "%d", i);  // <- преобразую в строку i, чтобы нормально записать в файл предметы по индексам (а можно и не писать и привязать номер строки к номеру предмета в массиве)
@@ -132,6 +161,7 @@ bool items_list_export() {
     fputs(STANDART_ITEM_NAMES[i], items_file);
     fputc('\n', items_file);
   }
+
   fclose(items_file);
 
   return return_status;
@@ -148,21 +178,107 @@ void items_list_import() {
       return;
     }
     case ENOENT: {
-      int err = items_list_export();
-      if (err != true) {
+      int status = items_list_export();
+      if (!status) {
         return;
       }
+      if (safe_fopen(&items_file, "items.txt", "r") != 0) {
+        return;
+      }
+      break;
     }
+    default:
+      if (error_code != 0) {
+        return;
+      }
+      break;
+  }
+
+  int number_of_line_in_file = count_lines_in_file(items_file);  // узнаём сколько будем загружать предметов, считая строки (в идеальном мире)
+
+  if (number_of_line_in_file == 0) {
+    puts("КАКАЯ-ТО ДРЯНЬ ПРОИЗОШЛА, МНЕ УЖЕ ЛЕНЬ ПИСАТЬ ОБРАБОТЧИК ОШИБОК");
+    fclose(items_file);
+    return;
+  }
+
+  rewind(items_file);  // переводим указатель в файле на начало после count_lines_in_file
+
+  char** temp_items_names = realloc(items_names, number_of_line_in_file * sizeof(char*));
+  if (temp_items_names == NULL) {
+    perror("ПАМЯТИ ДЛЯ ПРЕДМЕТОВ НЕТ БРО ВСЁ КОНЕЦ");
+    free(items_names);
+    exit(ENOMEM);
+  }
+  items_names = temp_items_names;
+  total_number_of_items = number_of_line_in_file;
+
+  for (int i = 0; i < total_number_of_items; i++) {
+    items_names[i] = NULL;  // <- вот эта хрень вообще адовая. ЭТО СУКА САХАР ДЛЯ *(items_names + i)... просто ужас конченный.
+                            // Больше ни где не буду это использовать, потому что мой мозг Python-бедолаги не выдерживает такого синтаксиса
   }
 
   char line[BUFFER_SIZE];
-  int line_number = 1;
-
+  bool is_new_line = true;
+  char* full_line_ptr;
+  long id;
   while (fgets(line, BUFFER_SIZE, items_file) != NULL) {
+    bool line_is_ended = (strchr(line, '\n') != NULL);
     line[strcspn(line, "\r\n")] = '\0';
+    if (is_new_line) {
+      full_line_ptr = NULL;
+      char* endptr = NULL;
+      errno = 0;
+      id = strtol(line, &endptr, 10);
 
-    printf("Строка %d: %s\n", line_number, line);
-    line_number++;
+      if (endptr == line) {
+        printf("НЕТУ ЧИСЛА В СТРОКЕ, ИДИ ФАЙЛ ПЕРЕДЕЛЫВАЙ: %s", line);
+      }
+
+      while (*endptr == ' ') {
+        endptr++;
+      }
+
+      if (id >= 0 && id < total_number_of_items) {
+        if (items_names[id] != NULL) {
+          printf("АЛО У ТЕБЯ ПОВТОРЫ ID В ФАЙЛЕ: %ld", id);
+          // ... функция для освобождения памяти черещ free()
+          exit(ENOMEM);
+        }
+      } else {
+        printf("ЧТО У ТЕБЯ С ID? ИДИ ПЕРЕДЕЛЫВАЙ: %s", line);
+        // ... функция для освобождения памяти черещ free()
+        exit(ENOMEM);
+      }
+
+      if (!line_is_ended) {
+        is_new_line = false;
+      }
+
+      char* temp_full_line_prt = strdup(endptr);
+      if (temp_full_line_prt != NULL) {
+        full_line_ptr = temp_full_line_prt;
+      } else {
+        // ... функция для освобождения памяти черещ free()
+        exit(ENOMEM);
+      }
+
+    } else {
+      if (line_is_ended) {
+        is_new_line = true;
+      }
+      char* temp_full_line_prt = realloc(full_line_ptr, (strlen(full_line_ptr) + strlen(line) + 1));
+      if (temp_full_line_prt != NULL) {
+        full_line_ptr = temp_full_line_prt;
+        strcat(full_line_ptr, line);
+      } else {
+        // ... функция для освобождения всей памяти через free();
+      }
+    }
+
+    if (line_is_ended) {
+      items_names[id] = full_line_ptr;
+    }
   }
 
   fclose(items_file);
@@ -315,7 +431,11 @@ int main(int argc, char* argv[]) {
   // get_username();
   // main_menu();
   // items_list();
-  items_list_export();
+  // items_list_export();
+  items_list_import();
+  for (int i = 0; i < total_number_of_items; i++) {
+    printf("%s", items_names[i]);
+  }
   pause_screen();
   return EXIT_SUCCESS;
 }
