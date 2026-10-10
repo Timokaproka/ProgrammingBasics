@@ -167,6 +167,21 @@ bool items_list_export() {
   return return_status;
 }
 
+void free_items_names() {
+  if (items_names == NULL) {  // нет смысла очищать память
+    return;
+  }
+
+  for (int i = 0; i < total_number_of_items; i++) {
+    free(items_names[i]);   // Осовобождаем память которые были под строки
+    items_names[i] = NULL;  // Память освободили и убрали значение из укзаателя
+  }
+
+  free(items_names);  // Освобождаем пямять самого указателя на указатели
+  items_names = NULL;
+  total_number_of_items = 0;  // Обнуляем кол-во предметов
+}
+
 void items_list_import() {
   FILE* items_file;
   int error_code = safe_fopen(&items_file, "items.txt", "r");
@@ -242,12 +257,12 @@ void items_list_import() {
       if (id >= 0 && id < total_number_of_items) {
         if (items_names[id] != NULL) {
           printf("АЛО У ТЕБЯ ПОВТОРЫ ID В ФАЙЛЕ: %ld", id);
-          // ... функция для освобождения памяти черещ free()
+          free_items_names();
           exit(ENOMEM);
         }
       } else {
         printf("ЧТО У ТЕБЯ С ID? ИДИ ПЕРЕДЕЛЫВАЙ: %s", line);
-        // ... функция для освобождения памяти черещ free()
+        free_items_names();
         exit(ENOMEM);
       }
 
@@ -259,7 +274,7 @@ void items_list_import() {
       if (temp_full_line_prt != NULL) {
         full_line_ptr = temp_full_line_prt;
       } else {
-        // ... функция для освобождения памяти черещ free()
+        free_items_names();
         exit(ENOMEM);
       }
 
@@ -272,7 +287,7 @@ void items_list_import() {
         full_line_ptr = temp_full_line_prt;
         strcat(full_line_ptr, line);
       } else {
-        // ... функция для освобождения всей памяти через free();
+        free_items_names();
       }
     }
 
