@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <winerror.h>
+#include <wingdi.h>
 
 #define BUFFER_SIZE 256  // размер буфера для считывания в файлах
 #define READ_CHUNK_SIZE 8192
@@ -37,6 +39,7 @@ const char* const STANDART_ITEM_NAMES[STANDART_NUMBER_OF_ITEMS] = {
 
 char** items_names = NULL;
 int total_number_of_items = 0;
+int max_item_name = 0;
 
 void pause_screen() {
   puts("\nНажмите любую клавишу для возврата...");
@@ -238,7 +241,7 @@ void items_list_import() {
   char* full_line_ptr;
   long id;
   while (fgets(line, BUFFER_SIZE, items_file) != NULL) {
-    bool line_is_ended = (strchr(line, '\n') != NULL);
+    bool line_is_ended = (strchr(line, '\n') != NULL) || feof(items_file);  // <- feof возвращает true, если достигнут конец файла
     line[strcspn(line, "\r\n")] = '\0';
     if (is_new_line) {
       full_line_ptr = NULL;
@@ -297,6 +300,24 @@ void items_list_import() {
   }
 
   fclose(items_file);
+
+  bool full_id = true;
+  for (int i = 0; i < total_number_of_items; i++) {
+    if (items_names[i] == NULL) {
+      full_id = false;
+      printf("ОТСУТСТВУЕТ ID: %d", i);
+    }
+
+    size_t lenght = strlen(items_names[i]) + 1;
+    if (lenght > max_item_name) {
+      max_item_name = lenght;
+    }
+  }
+  if (!full_id) {
+    free_items_names();
+    pause_screen();
+    exit(EINVAL);
+  }
 }
 
 void change_time() {
@@ -370,7 +391,7 @@ void remove_item() {  // удалить предмет из слота
   pause_screen();
 }
 
-// 9-тый (мой) вариант
+// 9-тый (мой) вариант для лабы №2
 
 void items_is_neighbours() {
   system("cls");
@@ -389,7 +410,7 @@ void items_is_neighbours() {
     bool cond1 = (inventory[i] == first_id && inventory[i + 1] == second_id);
     bool cond2 = (inventory[i] == second_id && inventory[i + 1] == first_id);
     if (cond1 || cond2) {  // Наверное, так будет легче читать условия
-      printf("Найдены ID: %d, %d\n", i, i + 1);
+      printf("Найдены слоты: %d, %d\n", i, i + 1);
       neighbours = true;
     }
   }
@@ -400,6 +421,106 @@ void items_is_neighbours() {
 
   pause_screen();
 }
+
+void find_item_by_name() {
+  system("cls");
+  puts("ПОИСК ПО НАЗВАНИЮ ПРЕДМЕТА\n");
+  printf("Введите название предмета: ");
+  char* str = malloc((max_item_name + 2) * sizeof(char));  // <- +1 нужен, чтобы оставалось место под \n из консоли при вводе
+  if (str == NULL) {
+    exit(ENOMEM);
+  }
+
+  bool str_is_ended;
+  if (fgets(str, (max_item_name + 2) * sizeof(char), stdin) != NULL) {
+    str_is_ended = (strchr(str, '\n') != NULL);
+    if (!str_is_ended) {
+      puts("Чёт многовато символов");
+      free(str);
+      clearing_buffer();
+      pause_screen();
+      return;
+    }
+    // Удаление символа перевода строки, если он попал в буфер
+    str[strcspn(str, "\r\n")] = '\0';
+  } else {
+    free(str);
+    exit(EINVAL);
+  }
+
+  if (!str_is_ended) {
+    clearing_buffer();
+  }
+
+  bool finded = false;
+
+  for (int i = 0; i < total_number_of_items; i++) {
+    if (strcmp(items_names[i], str) == 0) {
+      finded = true;
+      printf("Найден слот: %d", i);
+    }
+  }
+
+  if (!finded) {
+    puts("Нет такого предмета");
+  }
+  free(str);
+  pause_screen();
+}
+
+// void diary_export() {
+//   FILE* diary_file;
+//   int error_code = safe_fopen(&diary_file, "diary.txt", "a");
+//   switch (error_code) {
+//     case EACCES: {
+//       puts("diary.txt: ОТКАЗАНО В ДОСТУПЕ");
+//       pause_screen();
+//       return;
+//     }
+//     case ENOENT: {
+//       puts("diary.txt: ФАЙЛ НЕ НАЙДЕН");
+//       break;
+//     }
+//     default:
+//       if (error_code != 0) {
+//         return;
+//       }
+//       break;
+//   }
+//
+//
+// }
+
+// 10-тый (мой) вариант для лабы №3
+
+// void map_import() {
+//   system("cls");
+//   puts("Карта");
+//
+//   FILE* map_item;
+//
+//   int error_code = safe_fopen(&map_item, "input.txt", "r");
+//
+//   switch (error_code) {
+//     case EACCES: {
+//       puts("input.txt: ОТКАЗАНО В ДОСТУПЕ");
+//       pause_screen();
+//       return;
+//     }
+//     case ENOENT: {
+//       puts("НЕТ ФАЙЛА input.txt!");
+//       pause_screen();
+//       return;
+//     }
+//     default:
+//       if (error_code != 0) {
+//         return;
+//       }
+//       break;
+//   }
+//
+//
+// }
 
 void main_menu() {
   while (true) {
@@ -414,7 +535,7 @@ void main_menu() {
     puts("[6] Соседние ячейки");
     printf("\nВыберите пункт: ");
 
-    switch (interval(0, 6)) {
+    switch (interval(0, 7)) {
       case 0:
         return;
       case 1:
@@ -437,20 +558,33 @@ void main_menu() {
       case 6:
         items_is_neighbours();
         break;
+      case 7:
+        find_item_by_name();
+        break;
+      case 8:
+
+        break;
+      case 9:
+
+        break;
     }
   }
 }
 
 int main(int argc, char* argv[]) {
   SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
+  SetConsoleCP(65001);
   // get_username();
   // main_menu();
   // items_list();
   // items_list_export();
   items_list_import();
   for (int i = 0; i < total_number_of_items; i++) {
-    printf("%s", items_names[i]);
+    printf("%s\n", items_names[i]);
   }
   pause_screen();
+
+  main_menu();
+  free_items_names();
   return EXIT_SUCCESS;
 }
