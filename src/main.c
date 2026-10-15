@@ -468,28 +468,37 @@ void find_item_by_name() {
   pause_screen();
 }
 
-// void diary_export() {
-//   FILE* diary_file;
-//   int error_code = safe_fopen(&diary_file, "diary.txt", "a");
-//   switch (error_code) {
-//     case EACCES: {
-//       puts("diary.txt: ОТКАЗАНО В ДОСТУПЕ");
-//       pause_screen();
-//       return;
-//     }
-//     case ENOENT: {
-//       puts("diary.txt: ФАЙЛ НЕ НАЙДЕН");
-//       break;
-//     }
-//     default:
-//       if (error_code != 0) {
-//         return;
-//       }
-//       break;
-//   }
-//
-//
-// }
+void diary_export() {
+  FILE* diary_file;
+  int error_code = safe_fopen(&diary_file, "diary.txt", "a");
+  switch (error_code) {
+    case EACCES: {
+      puts("diary.txt: ОТКАЗАНО В ДОСТУПЕ");
+      pause_screen();
+      return;
+    }
+    case ENOENT: {
+      puts("diary.txt: ФАЙЛ НЕ НАЙДЕН");
+      break;
+    }
+    default:
+      if (error_code != 0) {
+        return;
+      }
+      break;
+  }
+
+  fputs("---\n", diary_file);
+  fprintf(diary_file, "Имя фермера: %s\n", username);
+  fprintf(diary_file, "День %d, %02d:00\n", current_day, current_hour);
+  for (int i = 0; i < INVENTORY_SIZE; i++) {
+    fprintf(diary_file, "%d: %s\n", i, items_names[inventory[i]]);
+  }
+  fputc('\n', diary_file);
+
+  fclose(diary_file);
+  pause_screen();
+}
 
 // 10-тый (мой) вариант для лабы №3
 
@@ -525,7 +534,6 @@ void find_item_by_name() {
 void main_menu() {
   while (true) {
     system("cls");
-    printf("%s\n", username);
     puts("[0] Выход");
     puts("[1] Посмотреть на часы");
     puts("[2] Промотать время (поработать)");
@@ -535,7 +543,7 @@ void main_menu() {
     puts("[6] Соседние ячейки");
     printf("\nВыберите пункт: ");
 
-    switch (interval(0, 7)) {
+    switch (interval(0, 9)) {
       case 0:
         return;
       case 1:
@@ -562,7 +570,7 @@ void main_menu() {
         find_item_by_name();
         break;
       case 8:
-
+        diary_export();
         break;
       case 9:
 
@@ -574,16 +582,8 @@ void main_menu() {
 int main(int argc, char* argv[]) {
   SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
   SetConsoleCP(65001);
-  // get_username();
-  // main_menu();
-  // items_list();
-  // items_list_export();
+  get_username();
   items_list_import();
-  for (int i = 0; i < total_number_of_items; i++) {
-    printf("%s\n", items_names[i]);
-  }
-  pause_screen();
-
   main_menu();
   free_items_names();
   return EXIT_SUCCESS;
