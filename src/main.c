@@ -654,7 +654,7 @@ void main_menu() {
     puts("[9] Загрузить карту");
     printf("\nВыберите пункт: ");
 
-    switch (interval(0, 11)) {
+    switch (interval(0, 9)) {
       case 0:
         return;
       case 1:
