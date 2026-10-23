@@ -1,6 +1,7 @@
 #include <conio.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,12 @@
 
 #define BUFFER_SIZE 256  // размер буфера для считывания в файлах
 #define READ_CHUNK_SIZE 8192
+#define MAX_MAP_ROWS 64
+#define MAX_MAP_COLS 128
+
+char map[MAX_MAP_ROWS][MAX_MAP_COLS + 1];  // +1 под '\0' в конце каждой строки
+int map_rows = 0;
+int map_cols = 0;
 
 #define HOURS_IN_DAY 24              // кол-во часов в сутках
 #define INVENTORY_SIZE 10            // размер инвентаря
@@ -91,12 +98,24 @@ int interval(int min, int max) {
 }
 
 void get_username() {
-  printf("Введите своё имя (до 32 символов): ");
-  if (fgets(username, sizeof(username), stdin) != NULL) {
-    // Удаление символа перевода строки, если он попал в буфер
-    username[strcspn(username, "\r\n")] = '\0';
+  bool valid_name = false;
+  while (!(valid_name)) {
+    printf("Введите своё имя (до 32 байтов): ");  // пусть пользователь сам считает сколько это в символах.
+    if (fgets(username, sizeof(username), stdin) != NULL) {
+      size_t len = strcspn(username, "\n");
+      username[strcspn(username, "\r")] = '\0';
+      if (username[len] == '\n') {
+        username[len] = '\0';  // строка прочитана целиком, просто убираем '\n'
+        valid_name = username[0] != '\0' ? true : false;
+      } else {
+        clearing_buffer();  // имя длиннее 32 символов, выкидываем остаток
+        puts("Имя слишком длинное");
+      }
+    } else {
+      exit(EXIT_FAILURE);
+    }
   }
-  clearing_buffer();  // очищаем буфер
+
   // Великий Тимофей Владиславович сказал, что clearing_buffer как отдельная функция не нужна, а в итоге то она пригодидлась, зря убирал её(
 }
 
@@ -109,7 +128,7 @@ int safe_fopen(FILE** file, const char* filename, const char* mode) {  // <- у�
   *file = fopen(filename, mode);  // тут уже разыменовали указатель и теперь это просто указатель на экземпляр FILE
 
   if (*file == NULL) {
-    return (errno != 0) ? errno : EIO;  // <- возвращаем ошибку. Если errno осталось 0, но файл мы так и не смогли прочитать, то вызываем "обощённую ошибку ввода-вывода"
+    return (errno != 0) ? errno : EIO;  // <- возвращаем ошибку. Если errno осталось 0, но файл мы так и не смогли прочитать, то вызываем "обощённую ошибку ввода-вывода"
   }
   return 0;  // а тут всё круто
 }
@@ -241,7 +260,7 @@ void items_list_import() {
   char* full_line_ptr;
   long id;
   while (fgets(line, BUFFER_SIZE, items_file) != NULL) {
-    bool line_is_ended = (strchr(line, '\n') != NULL) || feof(items_file);  // <- feof возвращает true, если достигнут конец файла
+    bool line_is_ended = strchr(line, '\n') != NULL || feof(items_file);  // <- feof возвращает true, если достигнут конец файла
     line[strcspn(line, "\r\n")] = '\0';
     if (is_new_line) {
       full_line_ptr = NULL;
@@ -500,36 +519,125 @@ void diary_export() {
   pause_screen();
 }
 
-// 10-тый (мой) вариант для лабы №3
+// 10-тый (мой) вариант для лабы №3 (не стал я делать динамический размер карты, не хочу, но так то стоит...)
+// Распаковывает RLE-строку в out. Возвращает ширину или -1 при ошибке.
+int rle_decode_line(const char* src, char* out) {
+  int len = 0;
+  while (*src != '\0' && *src != '\n' && *src != '\r') {
+    char* end;
+    long count = strtol(src, &end, 10);
+    if (end == src || count <= 0 || count > MAX_MAP_COLS - len) {
+      return -1;  // нет числа, число <= 0 или строка слишком широкая
+    }
+    char symbol = *end;
+    if (symbol == '\0' || symbol == '\n' || symbol == '\r') {
+      return -1;  // число без символа
+    }
+    for (int i = 0; i < count; i++) {
+      out[len] = symbol;
+      len++;
+    }
+    src = end + 1;
+  }
+  out[len] = '\0';
+  return len;
+}
 
-// void map_import() {
-//   system("cls");
-//   puts("Карта");
-//
-//   FILE* map_item;
-//
-//   int error_code = safe_fopen(&map_item, "input.txt", "r");
-//
-//   switch (error_code) {
-//     case EACCES: {
-//       puts("input.txt: ОТКАЗАНО В ДОСТУПЕ");
-//       pause_screen();
-//       return;
-//     }
-//     case ENOENT: {
-//       puts("НЕТ ФАЙЛА input.txt!");
-//       pause_screen();
-//       return;
-//     }
-//     default:
-//       if (error_code != 0) {
-//         return;
-//       }
-//       break;
-//   }
-//
-//
-// }
+bool map_read(FILE* map_file) {
+  map_rows = 0;  // если загрузка не удастся, карты не будет
+  map_cols = 0;
+
+  char line[BUFFER_SIZE];
+  int rows = 0;
+  int cols = 0;
+
+  while (fgets(line, BUFFER_SIZE, map_file) != NULL) {
+    if (line[0] == '\n' || line[0] == '\r') {
+      continue;  // пустая строка
+    }
+    if (rows == MAX_MAP_ROWS) {
+      fprintf(stderr, "Слишком много строк в карте\n");
+      return false;
+    }
+    int len = rle_decode_line(line, map[rows]);
+    if (len <= 0) {
+      fprintf(stderr, "Ошибка в строке: %s", line);
+      return false;
+    }
+    if (rows > 0 && len != cols) {
+      fprintf(stderr, "Ширина строки %d, а должна быть %d: %s", len, cols, line);
+      return false;
+    }
+    cols = len;
+    rows++;
+  }
+
+  if (rows == 0) {
+    fprintf(stderr, "Карта пустая\n");
+    return false;
+  }
+  map_rows = rows;
+  map_cols = cols;
+  return true;
+}
+
+bool map_import() {
+  system("cls");
+  puts("Карта");
+
+  FILE* map_file;
+  int error_code = safe_fopen(&map_file, "input.txt", "r");
+  if (error_code != 0) {
+    fprintf(stderr, "input.txt: %s\n", strerror(error_code));
+    pause_screen();
+    return false;
+  }
+
+  if (map_read(map_file)) {
+    printf("Карта загружена: %d x %d\n", map_cols, map_rows);
+  }
+  fclose(map_file);  // закрываем в одном месте при любом исходе
+  return true;
+}
+
+// Пишет карту в любой поток или файл или консоль (или куда захочу боже)
+void map_write(FILE* out) {
+  for (int i = 0; i < map_rows; i++) {
+    fprintf(out, "%s\n", map[i]);
+  }
+}
+
+void map_export() {
+  if (map_rows == 0) {
+    puts("Карта не загружена. Ну давай, решай проблемы. Боже, кто из нас парень?");
+    pause_screen();
+    return;
+  }
+
+  FILE* output_file;
+  int error_code = safe_fopen(&output_file, "output.txt", "w");
+  if (error_code != 0) {
+    fprintf(stderr, "output.txt: %s\n", strerror(error_code));
+    pause_screen();
+    return;
+  }
+
+  map_write(output_file);
+  fclose(output_file);
+
+  puts("Карта сохранена в output.txt");
+  pause_screen();
+}
+
+void map_show() {
+  if (map_rows == 0) {
+    puts("Карта не загружена. Твои проблемы — не мои проблемы");
+  } else {
+    map_write(stdout);
+  }
+}
+
+
 
 void main_menu() {
   while (true) {
@@ -541,9 +649,12 @@ void main_menu() {
     puts("[4] Положить предмет в слот");
     puts("[5] Выбросить предмет");
     puts("[6] Соседние ячейки");
+    puts("[7] Найти предмет по названию");
+    puts("[8] Записать в дневник");
+    puts("[9] Загрузить карту");
     printf("\nВыберите пункт: ");
 
-    switch (interval(0, 9)) {
+    switch (interval(0, 11)) {
       case 0:
         return;
       case 1:
@@ -573,7 +684,13 @@ void main_menu() {
         diary_export();
         break;
       case 9:
-
+        if (map_import()) {
+          map_show();
+          map_export();
+        }
+        else {
+          pause_screen();
+        }
         break;
     }
   }
@@ -581,7 +698,7 @@ void main_menu() {
 
 int main(int argc, char* argv[]) {
   SetConsoleOutputCP(65001);  // нужно исключительно для винды, потому что ру текст плохо отображается
-  SetConsoleCP(65001);
+  SetConsoleCP(65001);        // а это для ввода
   get_username();
   items_list_import();
   main_menu();
